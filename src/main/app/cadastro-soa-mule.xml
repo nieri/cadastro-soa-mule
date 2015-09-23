@@ -25,9 +25,10 @@ http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/jso
         <json:object-to-json-transformer doc:name="Convert Object to JSON"/>
     </flow>
     <flow name="DELETE">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/" allowedMethods="DELETE" doc:name="HTTP"/>
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/delete" allowedMethods="DELETE" doc:name="HTTP"/>
+        <json:json-to-object-transformer returnClass="br.com.munieri.cadastro.model.Person" doc:name="JSON to Person"/>
         <db:delete config-ref="MySQL_Configuration" doc:name="Database">
-            <db:dynamic-query><![CDATA[delete from Person where id = "#[message.inboundProperties['http.path.params'].id]"]]></db:dynamic-query>
+            <db:parameterized-query><![CDATA[delete from Person where id = #[payload.id]]]></db:parameterized-query>
         </db:delete>
         <json:object-to-json-transformer doc:name="Object to JSON"/>
     </flow>
