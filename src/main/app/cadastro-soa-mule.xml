@@ -8,7 +8,7 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
-    <db:generic-config doc:name="Generic Database Configuration" driverClassName="com.mysql.jdbc.Driver" name="MySQL_Configuration" url="jdbc:mysql://localhost:3306/cadastro?user=sa&amp;password=sa"/>
+    <db:generic-config doc:name="Generic Database Configuration" driverClassName="com.mysql.jdbc.Driver" name="MySQL_Configuration" url="jdbc:mysql://localhost:3307/cadastro?user=sa&amp;password=sa"/>
     <http:listener-config doc:name="HTTP Listener Configuration" host="0.0.0.0" name="HTTP_Listener_Configuration" port="8081"/>
         <flow name="FIND_ALL">
         <http:listener config-ref="HTTP_Listener_Configuration" doc:name="Recieve HTTP request" path="/all" allowedMethods="GET"/>
@@ -25,10 +25,10 @@ http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/jso
         <json:object-to-json-transformer doc:name="Convert Object to JSON"/>
     </flow>
     <flow name="DELETE">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/delete" allowedMethods="DELETE" doc:name="HTTP"/>
-        <json:json-to-object-transformer returnClass="br.com.munieri.cadastro.model.Person" doc:name="JSON to Person"/>
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/delete/{id}" allowedMethods="DELETE" doc:name="HTTP"/>
         <db:delete config-ref="MySQL_Configuration" doc:name="Database">
-            <db:parameterized-query><![CDATA[delete from Person where id = #[payload.id]]]></db:parameterized-query>
+            <db:dynamic-query><![CDATA[delete from Person 
+where id = #[message.inboundProperties.'http.uri.params'.id]]]></db:dynamic-query>
         </db:delete>
         <json:object-to-json-transformer doc:name="Object to JSON"/>
     </flow>
