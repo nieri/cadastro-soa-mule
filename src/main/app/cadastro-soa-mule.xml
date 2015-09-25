@@ -8,7 +8,7 @@ http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/cor
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
-    <db:generic-config doc:name="Generic Database Configuration" driverClassName="com.mysql.jdbc.Driver" name="MySQL_Configuration" url="jdbc:mysql://localhost:3307/cadastro?user=sa&amp;password=sa"/>
+    <db:generic-config doc:name="Generic Database Configuration" driverClassName="com.mysql.jdbc.Driver" name="MySQL_Configuration" url="jdbc:mysql://localhost:3306/cadastro?user=sa&amp;password=sa"/>
     <http:listener-config doc:name="HTTP Listener Configuration" host="0.0.0.0" name="HTTP_Listener_Configuration" port="8081"/>
         <flow name="FIND_ALL">
         <http:listener config-ref="HTTP_Listener_Configuration" doc:name="Recieve HTTP request" path="/all" allowedMethods="GET"/>
@@ -18,9 +18,10 @@ http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/jso
         <json:object-to-json-transformer doc:name="Convert Object to JSON"/>
     </flow>
     <flow name="FIND">
-        <http:listener config-ref="HTTP_Listener_Configuration" doc:name="Recieve HTTP request" path="/" allowedMethods="GET"/>
+        <http:listener config-ref="HTTP_Listener_Configuration" doc:name="Recieve HTTP request" path="/person/{id}" allowedMethods="GET"/>
         <db:select config-ref="MySQL_Configuration" doc:name="Perform a query in MySQL">
-            <db:dynamic-query><![CDATA[select * from Person where id = "#[message.inboundProperties['http.query.params'].id]"]]></db:dynamic-query>
+            <db:dynamic-query><![CDATA[select * from Person 
+where id = #[message.inboundProperties.'http.uri.params'.id]]]></db:dynamic-query>
         </db:select>
         <json:object-to-json-transformer doc:name="Convert Object to JSON"/>
     </flow>
@@ -33,12 +34,25 @@ where id = #[message.inboundProperties.'http.uri.params'.id]]]></db:dynamic-quer
         <json:object-to-json-transformer doc:name="Object to JSON"/>
     </flow>
     <flow name="INSERT">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/" allowedMethods="POST" doc:name="HTTP"/>
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/create" allowedMethods="POST" doc:name="HTTP"/>
         <json:json-to-object-transformer returnClass="br.com.munieri.cadastro.model.Person" doc:name="JSON to Person"/>
         <db:insert config-ref="MySQL_Configuration" doc:name="Database">
             <db:parameterized-query><![CDATA[insert into Person(name, phone, mobile, dateBirth) 
 values (#[payload.name], #[payload.phone], #[payload.mobile], #[payload.dateBirth])]]></db:parameterized-query>
         </db:insert>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </flow>
+    <flow name="UPDATE">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/update" allowedMethods="POST" doc:name="HTTP"/>
+        <json:json-to-object-transformer returnClass="br.com.munieri.cadastro.model.Person" doc:name="JSON to Person"/>
+        <db:update config-ref="MySQL_Configuration" doc:name="Database">
+            <db:parameterized-query><![CDATA[update Person set 
+name = #[payload.name], 
+phone = #[payload.phone], 
+mobile = #[payload.mobile],
+dateBirth = #[payload.dateBirth]
+where id = #[payload.id]]]></db:parameterized-query>
+        </db:update>
         <json:object-to-json-transformer doc:name="Object to JSON"/>
     </flow>
 </mule>
